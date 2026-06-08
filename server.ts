@@ -25,6 +25,18 @@ async function startServer() {
     return resendInstance;
   };
 
+  // API Route: Check Resend Key Status
+  app.get("/api/resend-status", (req, res) => {
+    const isConfigured = !!process.env.RESEND_API_KEY;
+    res.json({
+      success: true,
+      configured: isConfigured,
+      message: isConfigured 
+        ? "Resend API is fully configured and ready to dispatch emails." 
+        : "RESEND_API_KEY environment variable is not defined."
+    });
+  });
+
   // API Route: Test Resend configuration
   app.get("/api/test-resend", async (req, res) => {
     const resend = getResend();
@@ -35,19 +47,29 @@ async function startServer() {
       });
     }
 
+    const targetEmail = (req.query.email as string) || "nour.mohamashaly@gmail.com";
+
     try {
       const { data, error } = await resend.emails.send({
         from: "Resend Test <onboarding@resend.dev>",
-        to: "m7mdyasser55@gmail.com",
+        to: targetEmail,
         subject: "Resend Configuration Test",
-        html: "<strong>If you are reading this, your Resend API secret is working correctly!</strong>",
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; padding: 20px;">
+            <h2 style="color: #dc2626;">Resend Active Integration Success!</h2>
+            <p>Hello! If you are reading this, your <strong>RESEND_API_KEY</strong> environment secret is configured correctly and functioning.</p>
+            <p>This confirmation is part of the diagnostic validation test for Dr. Nour Mashaly Clinic website.</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="font-size: 11px; color: #999;">Diagnostics Dispatched At: ${new Date().toISOString()}</p>
+          </div>
+        `,
       });
 
       if (error) {
         return res.status(500).json({ success: false, error });
       }
 
-      res.status(200).json({ success: true, message: "Test email sent successfully to m7mdyasser55@gmail.com", data });
+      res.status(200).json({ success: true, message: `Test email sent successfully to ${targetEmail}`, data });
     } catch (err) {
       res.status(500).json({ success: false, error: err instanceof Error ? err.message : String(err) });
     }
@@ -125,22 +147,51 @@ async function startServer() {
           </div>
         `;
 
-      // 1. Send to Clinic
-      await resend.emails.send({
-        from: "Clinic Notification <onboarding@resend.dev>",
-        to: "m7mdyasser55@gmail.com",
-        subject: subject,
-        html: clinicHtml,
-      });
+      // 1. Send to Clinic Contacts
+      const clinicRecipients = ["nour.mohamashaly@gmail.com", "m7mdyasser55@gmail.com"];
+      for (const dest of clinicRecipients) {
+        try {
+          await resend.emails.send({
+            from: "Clinic Notification <onboarding@resend.dev>",
+            to: dest,
+            subject: subject,
+            html: clinicHtml,
+          });
+          console.log(`Successfully sent clinic notification copy to ${dest}`);
+        } catch (clinicErr) {
+          console.warn(`Resend failed to notify clinic destination ${dest} directly:`, clinicErr);
+        }
+      }
 
       // 2. Send to Patient if email exists and is valid
       if (email && email.includes('@')) {
-        await resend.emails.send({
-          from: "Dr. Nour Mashaly Clinic <onboarding@resend.dev>",
-          to: email,
-          subject: patientSubject,
-          html: patientHtml,
-        });
+        try {
+          await resend.emails.send({
+            from: "Dr. Nour Mashaly Clinic <onboarding@resend.dev>",
+            to: email,
+            subject: patientSubject,
+            html: patientHtml,
+          });
+        } catch (patientEmailErr: any) {
+          console.warn("Failed to send email to patient (could be Resend sandbox restriction):", patientEmailErr);
+          // If the email is not one of our known clinic addresses, send a sandbox fallback copy to both clinic address candidates
+          if (!clinicRecipients.includes(email)) {
+            for (const dest of clinicRecipients) {
+              try {
+                await resend.emails.send({
+                  from: "Dr. Nour Mashaly Clinic <onboarding@resend.dev>",
+                  to: dest,
+                  subject: `[Sandbox Mirror] ${patientSubject}`,
+                  html: `<div style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-family: sans-serif; font-size: 13px;">
+                    <strong>Note:</strong> This is a mirrored copy of the appointment confirmation email prepared for <strong>${email}</strong>. In the Resend free/sandbox tier, emails can only be delivered to verified sandbox account owners.
+                  </div>` + patientHtml,
+                });
+              } catch (fallbackErr) {
+                console.error(`Failed to send sandbox copy to ${dest}:`, fallbackErr);
+              }
+            }
+          }
+        }
       }
 
       res.status(200).json({ success: true });

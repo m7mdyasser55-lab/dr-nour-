@@ -1,8 +1,17 @@
 import { motion } from 'motion/react';
 import { Award, GraduationCap, Users } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 import aboutImage from '../assets/images/regenerated_image_1778841710995.jpg';
 
 export function About() {
+  const { t } = useLanguage();
+
+  const achievements = [
+    { icon: GraduationCap, title: t('about.grad.title'), desc: t('about.grad.desc') },
+    { icon: Award, title: t('about.award.title'), desc: t('about.award.desc') },
+    { icon: Users, title: t('about.users.title'), desc: t('about.users.desc') }
+  ];
+
   return (
     <section id="about" className="py-24 relative overflow-hidden">
       <div className="container mx-auto px-6">
@@ -33,18 +42,16 @@ export function About() {
             viewport={{ once: true }}
             className="lg:w-1/2"
           >
-            <h2 className="text-red-500 font-bold uppercase tracking-widest text-[10px] mb-4">The Specialist</h2>
-            <h3 className="text-5xl md:text-6xl font-extrabold text-white mb-8 tracking-tight">Meet <span className="text-red-600">Dr. Nour Mashaly</span></h3>
+            <h2 className="text-red-500 font-bold uppercase tracking-widest text-[10px] mb-4">{t('about.badge')}</h2>
+            <h3 className="text-5xl md:text-6xl font-extrabold text-white mb-8 tracking-tight">
+              {t('about.title.meet')}<span className="text-red-650">{t('about.title.name')}</span>
+            </h3>
             <p className="text-white/40 text-lg mb-8 leading-relaxed font-medium">
-              A visionary in modern dentistry, Dr. Nour Mashaly combines years of clinical expertise with an artistic approach to oral health. Graduated from Ternopil University, she has dedicated her career to mastering the latest digital dental technologies.
+              {t('about.desc')}
             </p>
 
             <div className="grid gap-6">
-              {[
-                { icon: GraduationCap, title: "DDS, Ternopil University", desc: "Specialized in Digital Cosmetic Dentistry" },
-                { icon: Award, title: "Clinical Excellence Award", desc: "Recognized for innovative patient care 2022" },
-                { icon: Users, title: "Lead Dental Surgeon", desc: "Over 8,000 successful smile transformations" }
-              ].map((item, i) => (
+              {achievements.map((item, i) => (
                 <div key={i} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex items-center gap-6 shadow-sm hover:bg-white/10 transition-colors group">
                   <div className="w-12 h-12 rounded-xl bg-red-600/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
                     <item.icon className="w-6 h-6" />

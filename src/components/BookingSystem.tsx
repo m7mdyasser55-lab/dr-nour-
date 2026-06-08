@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Calendar as CalendarIcon, Clock, User, CheckCircle2 } from 'lucide-react';
 import { createBooking, createInquiry } from '../lib/db';
+import { useLanguage } from '../lib/LanguageContext';
 
 export function BookingSystem() {
+  const { t, isRtl } = useLanguage();
   const [type, setType] = useState<'booking' | 'inquiry'>('booking');
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState('');
@@ -12,7 +14,14 @@ export function BookingSystem() {
   const [loading, setLoading] = useState(false);
 
   const times = ['04:00 PM', '05:00 PM', '06:00 PM', '07:00 PM', '08:00 PM'];
-  const services = ['Consultation', 'Teeth Whitening', 'Cleaning', 'Emergency', 'Orthodontics'];
+  
+  const services = [
+    { value: 'Consultation', label: t('service.opt.consultation') },
+    { value: 'Teeth Whitening', label: t('service.opt.whitening') },
+    { value: 'Cleaning', label: t('service.opt.cleaning') },
+    { value: 'Emergency', label: t('service.opt.emergency') },
+    { value: 'Orthodontics', label: t('service.opt.orthodontic') },
+  ];
 
   const handleNext = async () => {
     if (type === 'booking' && step === 3) {
@@ -102,18 +111,20 @@ export function BookingSystem() {
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
           <div className="flex-1">
-            <h2 className="text-red-600 font-bold uppercase tracking-widest text-[10px] mb-4">Reservation</h2>
-            <h3 className="text-5xl md:text-7xl font-extrabold text-white mb-8 tracking-tight">Your Digital <span className="text-red-600">Smile Journey.</span></h3>
+            <h2 className="text-red-600 font-bold uppercase tracking-widest text-[10px] mb-4">{t('booking.badge')}</h2>
+            <h3 className="text-5xl md:text-7xl font-extrabold text-white mb-8 tracking-tight">
+              {t('booking.title.journey')}<span className="text-red-600">{t('booking.title.smile')}</span>
+            </h3>
             <p className="text-white/40 text-lg mb-8 leading-relaxed font-medium">
-              Secure your session through our seamless booking interface. Modern technology meets dedicated care.
+              {t('booking.desc')}
             </p>
             
             <div className="space-y-4">
               {[
-                'Instant secure confirmation',
-                'Priority diagnostic care',
-                'Digital clinical history',
-                'Expert dental consultation'
+                t('booking.highlight.instant'),
+                t('booking.highlight.priority'),
+                t('booking.highlight.digital'),
+                t('booking.highlight.expert')
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full bg-red-600/10 flex items-center justify-center text-red-600">
@@ -132,13 +143,13 @@ export function BookingSystem() {
                 onClick={() => { setType('booking'); handleReset(); }}
                 className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${type === 'booking' ? 'bg-red-600 text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
               >
-                Booking
+                {t('booking.tab.booking')}
               </button>
               <button 
                 onClick={() => { setType('inquiry'); handleReset(); }}
                 className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${type === 'inquiry' ? 'bg-red-600 text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
               >
-                Inquiry
+                {t('booking.tab.inquiry')}
               </button>
             </div>
 
@@ -152,39 +163,39 @@ export function BookingSystem() {
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 <h4 className="text-3xl font-extrabold text-white mb-4 tracking-tight">
-                  {type === 'booking' ? 'Confirmed!' : 'Message Sent!'}
+                  {type === 'booking' ? t('booking.success.title.booking') : t('booking.success.title.inquiry')}
                 </h4>
                 <p className="text-white/40 font-medium mb-8">
                   {type === 'booking' 
-                    ? 'Your session is locked. A confirmation email has been dispatched.' 
-                    : 'Your inquiry has been submitted. Our team will contact you shortly.'}
+                    ? t('booking.success.desc.booking') 
+                    : t('booking.success.desc.inquiry')}
                 </p>
                 <button
                   onClick={handleReset}
-                  className="px-10 py-4 bg-red-600 text-white rounded-xl font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 shadow-xl shadow-red-900/40"
+                  className="px-10 py-4 bg-red-600 text-white rounded-xl font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 shadow-xl shadow-red-900/40 cursor-pointer"
                 >
-                  Return
+                  {t('booking.success.return')}
                 </button>
               </motion.div>
             ) : type === 'booking' ? (
               <>
                 {step === 1 && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">Select Service</h4>
+                    <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">{t('booking.step1.title')}</h4>
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">Dental Service</label>
+                        <label className="block text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">{t('booking.step1.label.service')}</label>
                         <select 
                           className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-red-500 transition-all outline-none font-bold text-white"
                           value={formData.service}
                           onChange={(e) => setFormData({ ...formData, service: e.target.value })}
                         >
-                          <option value="" className="bg-slate-900">Choose Service</option>
-                          {services.map(s => <option key={s} value={s} className="bg-slate-900">{s}</option>)}
+                          <option value="" className="bg-slate-900">{t('booking.step1.choose')}</option>
+                          {services.map(s => <option key={s.value} value={s.value} className="bg-slate-900">{s.label}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">Preferred Date</label>
+                        <label className="block text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">{t('booking.step1.label.date')}</label>
                         <input 
                           type="date" 
                           min={new Date().toISOString().split('T')[0]}
@@ -196,9 +207,9 @@ export function BookingSystem() {
                       <button
                         disabled={!selectedDate || !formData.service}
                         onClick={handleNext}
-                        className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed mt-4 shadow-xl shadow-red-900/40"
+                        className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed mt-4 shadow-xl shadow-red-900/40 cursor-pointer"
                       >
-                        Next Step
+                        {t('booking.step1.btn.next')}
                       </button>
                     </div>
                   </motion.div>
@@ -206,16 +217,16 @@ export function BookingSystem() {
 
                 {step === 2 && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <button onClick={() => setStep(1)} className="text-red-500 font-bold mb-4 flex items-center gap-1 text-[10px] uppercase tracking-widest">
-                      ← Previous
+                    <button onClick={() => setStep(1)} className="text-red-500 font-bold mb-4 flex items-center gap-1 text-[10px] uppercase tracking-widest cursor-pointer">
+                      {isRtl ? '→' : '←'} {t('booking.step2.prev')}
                     </button>
-                    <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">Select Time</h4>
+                    <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">{t('booking.step2.title')}</h4>
                     <div className="grid grid-cols-2 gap-3 mb-8">
                       {times.map((t) => (
                         <button
                           key={t}
                           onClick={() => setSelectedTime(t)}
-                          className={`p-4 rounded-2xl font-bold transition-all border text-sm ${
+                          className={`p-4 rounded-2xl font-bold transition-all border text-sm cursor-pointer ${
                             selectedTime === t 
                               ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-900/40' 
                               : 'bg-white/5 border-white/10 text-white/40 hover:border-red-500/50 hover:text-white'
@@ -228,44 +239,48 @@ export function BookingSystem() {
                     <button
                       disabled={!selectedTime}
                       onClick={handleNext}
-                      className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all disabled:opacity-30 mt-4 shadow-xl shadow-red-900/40"
+                      className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all disabled:opacity-30 mt-4 shadow-xl shadow-red-900/40 cursor-pointer"
                     >
-                      Confirm Slot
+                      {t('booking.step2.btn.confirm')}
                     </button>
                   </motion.div>
                 )}
 
                 {step === 3 && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <button onClick={() => setStep(2)} className="text-red-500 font-bold mb-4 flex items-center gap-1 text-[10px] uppercase tracking-widest">
-                      ← Previous
+                    <button onClick={() => setStep(2)} className="text-red-500 font-bold mb-4 flex items-center gap-1 text-[10px] uppercase tracking-widest cursor-pointer">
+                      {isRtl ? '→' : '←'} {t('booking.step2.prev')}
                     </button>
-                    <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">Your Profile</h4>
+                    <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">{t('booking.step3.title')}</h4>
                     <div className="space-y-6">
                       <input
-                        placeholder="Full Name"
+                        placeholder={t('booking.step3.placeholder.name')}
                         value={formData.name}
                         className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-red-500 transition-all outline-none font-bold text-white placeholder:text-white/20"
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
                       <input
                         type="email"
-                        placeholder="Email Address (For Confirmation)"
+                        placeholder={t('booking.step3.placeholder.email')}
                         value={formData.email}
                         className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-red-500 transition-all outline-none font-bold text-white placeholder:text-white/20"
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
                       />
                       <div className="p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
-                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2">Manifest Summary</p>
-                        <p className="text-sm font-bold text-white">{formData.service} with Dr. Nour</p>
+                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.2em] mb-2">{t('booking.step3.manifest.title')}</p>
+                        <p className="text-sm font-bold text-white">
+                          {services.find(s => s.value === formData.service)?.label || formData.service} {t('booking.step3.manifest.with')}
+                        </p>
                         <p className="text-xs font-bold text-red-500/60 uppercase tracking-wider">{selectedDate} / {selectedTime}</p>
+                        <p className="text-[10px] text-white/45 mt-2 font-medium">{t('booking.step3.manifest.note')}</p>
                       </div>
                       <button
-                        disabled={!formData.name || loading}
+                        disabled={!formData.name || !formData.email || loading}
                         onClick={handleNext}
-                        className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all disabled:opacity-30 mt-4 shadow-xl shadow-red-900/40 flex items-center justify-center"
+                        className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all disabled:opacity-30 mt-4 shadow-xl shadow-red-900/40 flex items-center justify-center cursor-pointer"
                       >
-                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirm Session'}
+                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : t('booking.step3.btn.confirm')}
                       </button>
                     </div>
                   </motion.div>
@@ -273,23 +288,23 @@ export function BookingSystem() {
               </>
             ) : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">Quick Inquiry</h4>
+                <h4 className="text-3xl font-extrabold text-white mb-8 tracking-tight">{t('booking.inquiry.title')}</h4>
                 <div className="space-y-6">
                   <input
-                    placeholder="Full Name"
+                    placeholder={t('booking.step3.placeholder.name')}
                     value={formData.name}
                     className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-red-500 transition-all outline-none font-bold text-white placeholder:text-white/20"
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                   <input
                     type="email"
-                    placeholder="Email Address"
+                    placeholder={t('booking.step3.placeholder.email')}
                     value={formData.email}
                     className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-red-500 transition-all outline-none font-bold text-white placeholder:text-white/20"
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                   <textarea
-                    placeholder="Your inquiry message..."
+                    placeholder={t('booking.inquiry.placeholder.msg')}
                     rows={4}
                     value={formData.message}
                     className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:ring-2 focus:ring-red-500 transition-all outline-none font-bold text-white placeholder:text-white/20 resize-none"
@@ -298,9 +313,9 @@ export function BookingSystem() {
                   <button
                     onClick={handleInquiry}
                     disabled={!formData.name || !formData.email || !formData.message || loading}
-                    className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all shadow-xl shadow-red-900/40 disabled:opacity-30 flex items-center justify-center"
+                    className="w-full py-5 bg-red-600 text-white rounded-[1.5rem] font-extrabold uppercase tracking-widest text-xs hover:bg-red-700 transition-all shadow-xl shadow-red-900/40 disabled:opacity-30 flex items-center justify-center cursor-pointer"
                   >
-                    {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Submit Inquiry'}
+                    {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : t('booking.inquiry.btn.submit')}
                   </button>
                 </div>
               </motion.div>

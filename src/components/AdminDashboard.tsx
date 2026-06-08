@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { auth, loginWithGoogle, logout, db } from '../lib/firebase';
+import { useLanguage } from '../lib/LanguageContext';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -19,7 +20,11 @@ import {
   Activity,
   Users,
   TrendingUp,
-  Filter
+  Filter,
+  ShieldCheck,
+  ShieldAlert,
+  Send,
+  Key
 } from 'lucide-react';
 import { updateBookingStatus, deleteInquiry } from '../lib/db';
 
@@ -46,6 +51,7 @@ interface Inquiry {
 }
 
 export function AdminDashboard({ onBack }: { onBack: () => void }) {
+  const { t, isRtl } = useLanguage();
   const [user, loadingAuth] = useAuthState(auth);
   const [activeTab, setActiveTab] = useState<'bookings' | 'inquiries'>('bookings');
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
@@ -78,7 +84,6 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
       } else if (error.code === 'auth/popup-closed-by-user') {
         setAuthError('The sign-in window was closed before completion. Please try again.');
       } else if (error.code === 'auth/cancelled-popup-request') {
-        // This often happens if the user clicks twice quickly. We can just ignore it or show a mild message.
         setAuthError('Another login request is already in progress.');
       } else {
         setAuthError(error.message || 'An unexpected error occurred during authentication.');
@@ -91,19 +96,44 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const isAdmin = user ? ADMIN_EMAILS.includes(user.email || '') : false;
 
   const [isTestingEmail, setIsTestingEmail] = useState(false);
+  const [resendStatus, setResendStatus] = useState<{ configured: boolean; message: string } | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState<boolean>(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const fetchResendStatus = async () => {
+    setLoadingStatus(true);
+    try {
+      const response = await fetch('/api/resend-status');
+      const data = await response.json();
+      if (data.success) {
+        setResendStatus({ configured: data.configured, message: data.message });
+      }
+    } catch (err) {
+      console.error('Error fetching Resend status:', err);
+    } finally {
+      setLoadingStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && ADMIN_EMAILS.includes(user.email || '')) {
+      fetchResendStatus();
+    }
+  }, [user]);
 
   const testEmailConnection = async () => {
     setIsTestingEmail(true);
+    setToast(null);
     try {
       const response = await fetch('/api/test-resend');
       const data = await response.json();
       if (data.success) {
-        alert('Success! A test email has been sent to your registered email.');
+        setToast({ type: 'success', message: 'Success! A verification email contains the test token has been dispatched successfully.' });
       } else {
-        alert(`Failed: ${data.message || 'Check if RESEND_API_KEY is correct.'}`);
+        setToast({ type: 'error', message: data.message || 'Check if RESEND_API_KEY is configured correctly.' });
       }
     } catch (err) {
-      alert('Error connecting to the server. Please check your internet connection.');
+      setToast({ type: 'error', message: 'Network error occurred. Unable to relay communications to server.' });
     } finally {
       setIsTestingEmail(false);
     }
@@ -152,8 +182,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
               onClick={onBack}
               className="w-full py-5 bg-white/5 text-white/60 rounded-[1.5rem] font-bold uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Return to Practice
+              <ArrowLeft className={`w-3.5 h-3.5 ${isRtl ? 'rotate-180' : ''}`} />
+              {t('admin.back')}
             </button>
           </div>
         </div>
@@ -218,21 +248,21 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
               className="px-6 py-3 bg-red-600/10 text-red-500 hover:bg-red-600/20 rounded-xl font-bold text-xs transition-all border border-red-500/20 flex items-center gap-2 disabled:opacity-50"
             >
               <Mail className="w-3.5 h-3.5" />
-              {isTestingEmail ? 'Testing...' : 'Test Integration'}
+              {isTestingEmail ? (isRtl ? 'جاري الاختبار...' : 'Testing...') : (isRtl ? 'اختبار المزامنة' : 'Test Integration')}
             </button>
             <button 
               onClick={onBack}
               className="px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-bold text-xs transition-all border border-white/10 flex items-center gap-2"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Live Site
+              <ArrowLeft className={`w-3.5 h-3.5 ${isRtl ? 'rotate-180' : ''}`} />
+              {t('admin.back')}
             </button>
             <button 
               onClick={() => logout()}
-              className="px-6 py-3 bg-red-600/10 text-red-500 hover:bg-red-600/20 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all border border-red-500/20 flex items-center gap-2"
+              className="px-6 py-3 bg-red-600/10 text-red-500 hover:bg-red-600/20 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all border border-red-500/20 flex items-center gap-2 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              Exit Dashboard
+              {t('admin.logout')}
             </button>
           </div>
         </div>
@@ -265,6 +295,80 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
             </motion.div>
           ))}
         </section>
+
+        {/* Resend API Integration Status */}
+        {resendStatus && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-12 p-8 rounded-[2.5rem] border backdrop-blur-xl relative overflow-hidden transition-all duration-300 ${
+              resendStatus.configured 
+                ? 'bg-green-500/5 border-green-500/20 text-green-200' 
+                : 'bg-red-500/5 border-red-500/20 text-red-200'
+            }`}
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/5 to-transparent rounded-bl-full pointer-events-none" />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${
+                  resendStatus.configured 
+                    ? 'bg-green-500/10 border-green-500/20 text-green-500' 
+                    : 'bg-red-500/10 border-red-500/20 text-red-500'
+                }`}>
+                  {resendStatus.configured ? <ShieldCheck className="w-6 h-6 animate-pulse" /> : <ShieldAlert className="w-6 h-6" />}
+                </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight text-white flex flex-wrap items-center gap-2">
+                    Email Service (Resend Integration)
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest ${
+                      resendStatus.configured ? 'bg-green-500/10 text-green-400 border border-green-400/20' : 'bg-red-500/10 text-red-400 border border-red-400/20'
+                    }`}>
+                      {resendStatus.configured ? 'Connected & Active' : 'Missing Key'}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-white/50 mt-1 font-medium leading-relaxed max-w-2xl">
+                    {resendStatus.message} {resendStatus.configured 
+                      ? 'The clinic and patient communications are successfully integrated to trigger notifications automatically.' 
+                      : 'Please define your RESEND_API_KEY inside the Secrets panel of Google AI Studio Settings. Once designated, click "Re-verify Status" to establish connectivity.'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 w-full md:w-auto self-stretch md:self-auto shrink-0">
+                <button 
+                  onClick={testEmailConnection}
+                  disabled={isTestingEmail || !resendStatus.configured}
+                  className="flex-1 md:flex-none px-6 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold text-xs transition-all border border-white/10 flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {isTestingEmail ? 'Sending...' : 'Test Sync'}
+                </button>
+                <button 
+                  onClick={fetchResendStatus}
+                  disabled={loadingStatus}
+                  className="flex-1 md:flex-none px-6 py-4 bg-white/5 hover:bg-white/10 text-white/80 rounded-2xl font-bold text-xs transition-all border border-white/10 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Key className="w-3.5 h-3.5 text-white/30" />
+                  {loadingStatus ? 'Checking...' : 'Re-verify Status'}
+                </button>
+              </div>
+            </div>
+
+            {toast && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mt-6 p-4 rounded-2xl border text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
+                  toast.type === 'success' 
+                    ? 'bg-green-500/10 border-green-500/20 text-green-400' 
+                    : 'bg-red-500/10 border-red-500/20 text-red-400'
+                }`}
+              >
+                {toast.type === 'success' ? <ShieldCheck className="w-4 h-4 shrink-0" /> : <ShieldAlert className="w-4 h-4 shrink-0" />}
+                <span>{toast.message}</span>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
 
         {/* Dashboard Controls */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-12">

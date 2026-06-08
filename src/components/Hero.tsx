@@ -1,8 +1,11 @@
 import { motion } from 'motion/react';
 import { Calendar, ShieldCheck, Star } from 'lucide-react';
+import { useLanguage } from '../lib/LanguageContext';
 import heroImage from '../assets/images/regenerated_image_1778841257517.png';
 
 export function Hero() {
+  const { t } = useLanguage();
+
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
       {/* Background decorative elements matching theme */}
@@ -20,15 +23,15 @@ export function Hero() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
-            Premium Dental Care
+            {t('hero.badge')}
           </div>
           
-          <h1 className="text-6xl md:text-8xl font-extrabold text-white leading-[1.05] tracking-tight mb-6">
-            Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400 font-black">Vision of a Smile.</span>
+          <h1 className="text-6.5xl md:text-8xl font-extrabold text-white leading-[1.05] tracking-tight mb-6">
+            {t('hero.title.part1')}<span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400 font-black">{t('hero.title.part2')}</span>
           </h1>
           
           <p className="text-lg md:text-xl text-white/60 max-w-xl mb-10 leading-relaxed font-medium">
-            Experience the fusion of advanced clinical expertise and modern aesthetic care with Dr. Nour Mashaly in Alexandria.
+            {t('hero.desc')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -37,13 +40,13 @@ export function Hero() {
               className="px-10 py-5 bg-red-600 text-white rounded-2xl font-bold text-lg hover:bg-red-700 transition-all shadow-2xl shadow-red-900/40 flex items-center justify-center gap-2 group"
             >
               <Calendar className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              Book Free Consultation
+              {t('hero.btn.consultation')}
             </a>
             <a
               href="#services"
               className="px-10 py-5 bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-2xl font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2"
             >
-              Explore Services
+              {t('hero.btn.services')}
             </a>
           </div>
           
@@ -51,17 +54,17 @@ export function Hero() {
             <div>
               <div className="flex items-center gap-1 text-red-500 mb-1">
                 <Star className="w-4 h-4 fill-current" />
-                <span className="text-lg font-bold text-white">4.9/5</span>
+                <span className="text-lg font-bold text-white">{t('hero.ratingValue')}</span>
               </div>
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Patient Rating</p>
+              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{t('hero.rating')}</p>
             </div>
             <div>
-              <div className="text-lg font-bold text-white mb-1">8k+</div>
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Happy Patients</p>
+              <div className="text-lg font-bold text-white mb-1">{t('hero.patientsValue')}</div>
+              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{t('hero.patients')}</p>
             </div>
             <div>
-              <div className="text-lg font-bold text-white mb-1">10+</div>
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Years Expertise</p>
+              <div className="text-lg font-bold text-white mb-1">{t('hero.expertiseValue')}</div>
+              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{t('hero.expertise')}</p>
             </div>
           </div>
         </motion.div>
@@ -90,8 +93,8 @@ export function Hero() {
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-bold text-white tracking-tight">Certified Professional</h4>
-                <p className="text-xs font-bold text-white/30 uppercase tracking-widest">Alexandria Specialist</p>
+                <h4 className="font-bold text-white tracking-tight">{t('hero.badge.certified')}</h4>
+                <p className="text-xs font-bold text-white/30 uppercase tracking-widest">{t('hero.badge.specialist')}</p>
               </div>
             </motion.div>
           </div>

@@ -1,50 +1,54 @@
 import { motion } from 'motion/react';
+import { useLanguage } from '../lib/LanguageContext';
 import case1 from '../assets/images/regenerated_image_1779030729981.png';
 import case3 from '../assets/images/regenerated_image_1779126058318.png';
 import case5 from '../assets/images/regenerated_image_1779030931731.jpg';
 import case6 from '../assets/images/regenerated_image_1779030735959.png';
-const cases = [
-  { 
-    title: 'Digital Hollywood Smile', 
-    category: 'Veneers', 
-    image: case1 
-  },
-  { 
-    title: 'Full Arch Reconstruction', 
-    category: 'Implants', 
-    image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=800' 
-  },
-  { 
-    title: 'Precision Aligners', 
-    category: 'Orthodontics', 
-    image: case3 
-  },
-  { 
-    title: 'Advanced Laser Contouring', 
-    category: 'Surgery', 
-    image: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800' 
-  },
-  { 
-    title: 'Whitening cases', 
-    category: 'Cosmetic', 
-    image: case5 
-  },
-  { 
-    title: 'Composite Masterpiece', 
-    category: 'Restoration', 
-    image: case6 
-  },
-];
 
 export function Gallery() {
+  const { t } = useLanguage();
+
+  const cases = [
+    { 
+      title: t('gallery.case.hollywood'), 
+      category: t('gallery.cat.veneers'), 
+      image: case1 
+    },
+    { 
+      title: t('gallery.case.reconstruction'), 
+      category: t('gallery.cat.implants'), 
+      image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=800' 
+    },
+    { 
+      title: t('gallery.case.aligners'), 
+      category: t('gallery.cat.ortho'), 
+      image: case3 
+    },
+    { 
+      title: t('gallery.case.laser'), 
+      category: t('gallery.cat.surgery'), 
+      image: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=800' 
+    },
+    { 
+      title: t('gallery.case.whitening'), 
+      category: t('gallery.cat.cosmetic'), 
+      image: case5 
+    },
+    { 
+      title: t('gallery.case.composite'), 
+      category: t('gallery.cat.restoration'), 
+      image: case6 
+    },
+  ];
+
   return (
     <section id="cases" className="py-24 bg-transparent">
       <div className="container mx-auto px-6">
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <h2 className="text-red-500 font-bold uppercase tracking-widest text-[10px] mb-4">Smile Gallery</h2>
-          <h3 className="text-5xl font-extrabold text-white mb-6 tracking-tight">Clinical Transformations</h3>
+          <h2 className="text-red-500 font-bold uppercase tracking-widest text-[10px] mb-4">{t('gallery.badge')}</h2>
+          <h3 className="text-5xl font-extrabold text-white mb-6 tracking-tight">{t('gallery.title')}</h3>
           <p className="text-white/40 text-lg font-medium mb-8">
-            Explore our curated selection of digital patient transformations. Real results, precision-engineered for every smile.
+            {t('gallery.desc')}
           </p>
           <a 
             href="https://www.instagram.com/drnourmashaly" 
@@ -52,7 +56,7 @@ export function Gallery() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-red-500 hover:text-red-400 font-semibold transition-colors group"
           >
-            <span>Follow on Instagram for more cases</span>
+            <span>{t('gallery.instagram')}</span>
             <div className="w-8 h-px bg-red-500 group-hover:w-12 transition-all" />
           </a>
         </div>
